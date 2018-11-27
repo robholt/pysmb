@@ -2858,7 +2858,7 @@ class SharedDevice:
 
 
 class SharedFile:
-    """
+    r"""
     Contain information about a file/folder entry that is shared on the shared device.
 
     As an application developer, you should not need to instantiate a *SharedFile* instance directly in your application.

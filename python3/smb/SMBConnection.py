@@ -17,7 +17,7 @@ class SMBConnection(SMB):
     SIGN_WHEN_REQUIRED = 2
 
     def __init__(self, username, password, my_name, remote_name, domain = '', use_ntlm_v2 = True, sign_options = SIGN_WHEN_REQUIRED, is_direct_tcp = False):
-        """
+        r"""
         Create a new SMBConnection instance.
 
         *username* and *password* are the user credentials required to authenticate the underlying SMB connection with the remote server.
