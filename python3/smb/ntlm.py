@@ -1,6 +1,7 @@
 
 import types, hmac, binascii, struct, random
 from .utils.pyDes import des
+from hashlib import md5
 
 try:
     import hashlib
@@ -9,13 +10,6 @@ try:
     def MD4(): return hashlib.new('md4')
 except ( ImportError, ValueError ):
     from .utils.md4 import MD4
-
-try:
-    import hashlib
-    def MD5(s): return hashlib.md5(s)
-except ImportError:
-    import md5
-    def MD5(s): return md5.new(s)
 
 ################
 # NTLMv2 Methods
@@ -161,13 +155,13 @@ def generateChallengeResponseV2(password, user, server_challenge, server_info, d
     d = MD4()
     d.update(password.encode('UTF-16LE'))
     ntlm_hash = d.digest()   # The NT password hash
-    response_key = hmac.new(ntlm_hash, (user.upper() + domain).encode('UTF-16LE')).digest()  # The NTLMv2 password hash. In [MS-NLMP], this is the result of NTOWFv2 and LMOWFv2 functions
+    response_key = hmac.new(ntlm_hash, (user.upper() + domain).encode('UTF-16LE'), md5).digest()  # The NTLMv2 password hash. In [MS-NLMP], this is the result of NTOWFv2 and LMOWFv2 functions
     temp = b'\x01\x01' + b'\0'*6 + client_timestamp + client_challenge + b'\0'*4 + server_info
-    ntproofstr = hmac.new(response_key, server_challenge + temp).digest()
+    ntproofstr = hmac.new(response_key, server_challenge + temp, md5).digest()
 
     nt_challenge_response = ntproofstr + temp
-    lm_challenge_response = hmac.new(response_key, server_challenge + client_challenge).digest() + client_challenge
-    session_key = hmac.new(response_key, ntproofstr).digest()
+    lm_challenge_response = hmac.new(response_key, server_challenge + client_challenge, md5).digest() + client_challenge
+    session_key = hmac.new(response_key, ntproofstr, md5).digest()
 
     return nt_challenge_response, lm_challenge_response, session_key
 
@@ -234,7 +228,7 @@ def generateChallengeResponseV1(password, server_challenge, has_extended_securit
         assert len(client_challenge) == 8
 
         lm_challenge_response = client_challenge + b'\0'*16
-        nt_challenge_response = DESL(nt_response_key, MD5(server_challenge + client_challenge).digest()[0:8])
+        nt_challenge_response = DESL(nt_response_key, md5(server_challenge + client_challenge).digest()[0:8])
     else:
         nt_challenge_response = DESL(nt_response_key, server_challenge)   # The result after DESL is the NT response
         lm_challenge_response = DESL(lm_response_key, server_challenge)   # The result after DESL is the LM response
